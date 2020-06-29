@@ -17,6 +17,9 @@
             groups="sudo"
             password="$6$YAxU46rTP2qW1yYJ$JUNjWmWeSGCUmvITQ9THE1grF64YIaBldhWCNMu3.oiwbA7cDQftzJkbNAhUxTqcmmmp7vEjsdfIJaa3/aYS81"
             comment="new user"
+        - name: Set timezone to Asia/Kolkata
+          timezone:
+            name: Asia/Kolkata
         - name: Install docker packages
           apt:
             name: "{{ item }}"
