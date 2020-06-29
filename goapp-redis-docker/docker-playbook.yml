@@ -81,3 +81,9 @@
         - name: Run docker-compose
           remote_user: demo
           shell : docker-compose -f /etc/demo-app/docker-compose.yml up -d --build
+        - name: 'set periodic docker system prune'
+          cron:
+            name: 'docker-prune'
+            minute: '0'
+            hour: '*/2'
+            job: 'docker container prune -f'
