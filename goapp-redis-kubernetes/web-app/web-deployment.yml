@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: web
+  name: web-controller
+  namespace: demo-ops
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - image: aws_account_id.dkr.ecr.region.amazonaws.com/goapp
+        imagePullPolicy: Always
+        name: nodejsapp
+        ports:
+        - containerPort: 8000
+          name: http-server
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http-server
+          initialDelaySeconds: 15
+          timeoutSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http-server
+          initialDelaySeconds: 20
+          timeoutSeconds: 30
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+      imagePullSecrets:
+        - name: docker-pass
+      priorityClassName: system-cluster-critical
+      

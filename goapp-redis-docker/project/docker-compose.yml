@@ -1,0 +1,25 @@
+version: "3"
+services:
+  app:
+    build:
+        context: ./app
+    image: webapp
+    environment:
+        - DEMO_APP_ADDR=127.0.0.1
+        - DEMO_REDIS_ADDR=redis:6379
+    ports:
+        - "8080:8000"
+    links:
+      - redis
+    depends_on: 
+        - redis
+  redis:
+    build: 
+        context:  ./redis
+    image: redis1.0
+    volumes: 
+        - ./data:/var/lib/redis
+    expose: 
+        - "6379"
+
+

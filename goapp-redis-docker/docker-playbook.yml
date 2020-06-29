@@ -1,0 +1,80 @@
+-   hosts: targets
+    become: yes
+    gather_facts: false
+    tasks:
+        - name: change hostname to demo-ops
+          hostname:
+            name: "demo-ops"
+        - name: add myself to /etc/hosts
+          lineinfile:
+            dest: /etc/hosts
+            regexp: '^127\.0\.0\.1[ \t]+localhost'
+            line: '127.0.0.1 localhost demo-ops'
+            state: present
+        - name: create a new user
+          user: name=demo
+            state=present
+            groups="sudo"
+            password="$6$YAxU46rTP2qW1yYJ$JUNjWmWeSGCUmvITQ9THE1grF64YIaBldhWCNMu3.oiwbA7cDQftzJkbNAhUxTqcmmmp7vEjsdfIJaa3/aYS81"
+            comment="new user"
+        - name: Install docker packages
+          apt:
+            name: "{{ item }}"
+            state: present
+            update_cache: yes
+          with_items:
+            - apt-transport-https
+            - ca-certificates
+            - curl
+            - software-properties-common
+          tags:
+            - docker
+        - name: Install apt_key dependencies
+          apt:
+            name: '{{ item }}'
+          with_items: [python-urllib3, python-openssl, python-pyasn1, python-pip]
+        - name: Add Docker s official GPG key
+          shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          tags:
+            - docker
+        - name: Verify that we have the key with the fingerprint
+          apt_key:
+            id: 0EBFCD88
+            state: present
+          tags:
+            - docker
+        - name: Set up the stable repository
+          apt_repository:
+            repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+            state: present
+            update_cache: yes
+          tags:
+            - docker
+        - name: Update apt packages
+          apt:
+            update_cache: yes
+          tags:
+            - docker
+        - name: Install docker
+          shell: apt install -y docker-ce=17.12.0~ce-0~ubuntu
+          tags:
+            - docker
+        - name: Add remote "ubuntu" user to "docker" group
+          user:
+            name: "demo"
+            group: "docker"
+            append: yes
+          tags: 
+            - docker
+        - name: Install docker-compose
+          get_url: 
+            url : https://github.com/docker/compose/releases/download/1.25.1-rc1/docker-compose-Linux-x86_64
+            dest: /usr/local/bin/docker-compose
+            mode: 'u+x,o+x'
+        - name: copy all files from folder to remote host
+          copy:
+            src: ./project/
+            dest: /etc/demo-app/
+        - name: Run docker-compose
+          remote_user: demo
+          shell : docker-compose -f /etc/demo-app/docker-compose.yml up -d --build
